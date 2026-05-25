@@ -69,16 +69,16 @@ See `hook_snippet.json` in this repo for a copy-paste reference.
 **4. Add toggle aliases to your shell:**
 
 ```bash
-echo "alias tts-on='touch ~/.claude/tts_enabled && echo \"TTS enabled\"'" >> ~/.zshrc
-echo "alias tts-off='rm -f ~/.claude/tts_enabled && echo \"TTS disabled\"'" >> ~/.zshrc
+echo "alias listen-on='touch ~/.claude/tts_enabled && echo \"Listen mode enabled\"'" >> ~/.zshrc
+echo "alias listen-off='rm -f ~/.claude/tts_enabled && echo \"Listen mode disabled\"'" >> ~/.zshrc
 source ~/.zshrc
 ```
 
 ## Usage
 
 ```bash
-tts-on    # Enable — Claude will read responses aloud
-tts-off   # Disable — silent mode
+listen-on    # Enable — Claude will read responses aloud
+listen-off   # Disable — silent mode
 ```
 
 TTS is **off by default**. Run `tts-on` once and it persists across sessions until you run `tts-off`.

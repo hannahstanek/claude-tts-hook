@@ -35,12 +35,12 @@ BASHRC=~/.bashrc
 
 add_aliases() {
   local file=$1
-  if [ -f "$file" ] && ! grep -q "tts-on" "$file"; then
+  if [ -f "$file" ] && ! grep -q "listen-on" "$file"; then
     echo "" >> "$file"
     echo "# Claude Code TTS toggle" >> "$file"
-    echo "alias tts-on='touch ~/.claude/tts_enabled && echo \"TTS enabled\"'" >> "$file"
-    echo "alias tts-off='rm -f ~/.claude/tts_enabled && echo \"TTS disabled\"'" >> "$file"
-    echo "Added tts-on / tts-off aliases to $file"
+    echo "alias listen-on='touch ~/.claude/tts_enabled && echo \"Listen mode enabled\"'" >> "$file"
+    echo "alias listen-off='rm -f ~/.claude/tts_enabled && echo \"Listen mode disabled\"'" >> "$file"
+    echo "Added listen-on / listen-off aliases to $file"
   fi
 }
 
