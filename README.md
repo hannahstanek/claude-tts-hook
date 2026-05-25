@@ -42,6 +42,17 @@ The installer will:
 source ~/.zshrc
 ```
 
+## How Commands Work
+
+All listen commands are run directly in your **terminal** — not inside Claude Code, not through Codex or any other AI tool. They are shell aliases that adjust your settings instantly.
+
+```
+Your terminal  →  listen-on / listen-speed 1.2 / listen-stop
+Claude Code    →  where you have AI conversations (responses get read aloud automatically)
+```
+
+Think of the listen commands as controls you adjust from your terminal, and Claude Code as the thing that benefits from those settings. You never need to tell Claude Code to "use listen mode" — it happens automatically via the hook whenever Claude finishes a response.
+
 ## Commands
 
 | Command | What it does |
