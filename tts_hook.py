@@ -3,7 +3,9 @@
 Claude Code TTS Hook
 Reads Claude's responses aloud using Microsoft Edge neural TTS (Aria voice).
 Triggered automatically via Claude Code's Stop hook.
-Toggle with: tts-on / tts-off
+Toggle with: listen-on / listen-off
+Speed with:  listen-speed 1.2  (or listen-slow / listen-normal / listen-fast)
+Stop with:   listen-stop
 """
 import asyncio
 import json
@@ -16,11 +18,21 @@ from pathlib import Path
 import edge_tts
 
 TOGGLE_FILE = Path.home() / ".claude" / "tts_enabled"
-VOICE = "en-US-AriaNeural"
+RATE_FILE   = Path.home() / ".claude" / "tts_rate"
+VOICE       = "en-US-AriaNeural"
+MAX_WORDS   = 600
 
 
 def is_enabled():
     return TOGGLE_FILE.exists()
+
+
+def get_rate():
+    if RATE_FILE.exists():
+        rate = RATE_FILE.read_text().strip()
+        if rate:
+            return rate
+    return "+0%"
 
 
 def clean_text(text):
@@ -38,18 +50,25 @@ def clean_text(text):
     return text.strip()
 
 
+def maybe_truncate(text):
+    words = text.split()
+    if len(words) > MAX_WORDS:
+        return " ".join(words[:MAX_WORDS]) + " ... response truncated."
+    return text
+
+
 def extract_last_assistant_text(event):
     text = event.get("last_assistant_message", "")
     if text:
-        return clean_text(str(text))
+        return maybe_truncate(clean_text(str(text)))
     return None
 
 
-async def speak(text):
+async def speak(text, rate):
     with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as f:
         tmp = f.name
     try:
-        tts = edge_tts.Communicate(text, VOICE)
+        tts = edge_tts.Communicate(text, VOICE, rate=rate)
         await tts.save(tmp)
         subprocess.run(["afplay", tmp], check=False, timeout=300)
     finally:
@@ -70,7 +89,8 @@ def main():
     if not text:
         return
 
-    asyncio.run(speak(text))
+    rate = get_rate()
+    asyncio.run(speak(text, rate))
 
 
 if __name__ == "__main__":

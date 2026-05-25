@@ -8,10 +8,10 @@ Claude Code supports [hooks](https://docs.anthropic.com/en/docs/claude-code/hook
 
 1. Receives Claude's last response as JSON
 2. Strips code blocks, markdown symbols, and URLs (hearing raw code is useless)
-3. Sends the cleaned text to Microsoft Edge's free neural TTS engine
+3. Sends the cleaned text to Microsoft Edge's free neural TTS engine at your chosen speed
 4. Plays the audio through your speakers via `afplay` (macOS)
 
-The result: every time Claude finishes a response, it's read aloud to you automatically.
+The result: every time Claude finishes a response, it's read aloud automatically.
 
 ## Requirements
 
@@ -22,70 +22,60 @@ The result: every time Claude finishes a response, it's read aloud to you automa
 
 ## Installation
 
-**1. Install the Python dependency:**
+**1. Clone and run the installer:**
 
 ```bash
-pip3 install edge-tts
-```
-
-**2. Copy the script:**
-
-```bash
-mkdir -p ~/.claude/scripts
-cp tts_hook.py ~/.claude/scripts/tts_hook.py
-chmod +x ~/.claude/scripts/tts_hook.py
-```
-
-Or run the installer:
-
-```bash
+git clone https://github.com/hannahstanek/claude-tts-hook
+cd claude-tts-hook
 chmod +x install.sh && ./install.sh
 ```
 
-**3. Add the hook to Claude Code settings:**
+The installer will:
+- Install the `edge-tts` Python package
+- Copy `tts_hook.py` to `~/.claude/scripts/`
+- Auto-inject the Stop hook into `~/.claude/settings.json`
+- Add all listen commands to your shell config
 
-Open `~/.claude/settings.json` and add the Stop hook. If you already have a `hooks` section, merge it in:
-
-```json
-{
-  "hooks": {
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 ~/.claude/scripts/tts_hook.py",
-            "async": true
-          }
-        ]
-      }
-    ]
-  }
-}
-```
-
-See `hook_snippet.json` in this repo for a copy-paste reference.
-
-**4. Add toggle aliases to your shell:**
+**2. Reload your shell:**
 
 ```bash
-echo "alias listen-on='touch ~/.claude/tts_enabled && echo \"Listen mode enabled\"'" >> ~/.zshrc
-echo "alias listen-off='rm -f ~/.claude/tts_enabled && echo \"Listen mode disabled\"'" >> ~/.zshrc
 source ~/.zshrc
 ```
 
-## Usage
+## Commands
+
+| Command | What it does |
+|---|---|
+| `listen-on` | Enable — Aria reads every Claude response aloud |
+| `listen-off` | Disable — silent mode |
+| `listen` | Show current status and speed |
+| `listen-stop` | Immediately stop audio mid-response |
+| `listen-speed 1.2` | Set any speed (0.5 to 2.0, e.g. 1.1, 1.3, 1.75) |
+| `listen-slow` | 0.5x preset |
+| `listen-normal` | 1.0x preset (default) |
+| `listen-fast` | 1.5x preset |
+
+Listen mode is **off by default** and persists across sessions.
+
+### Speed control
+
+`listen-speed` accepts any decimal multiplier:
 
 ```bash
-listen-on    # Enable — Claude will read responses aloud
-listen-off   # Disable — silent mode
+listen-speed 0.5    # half speed
+listen-speed 0.8    # slightly slower
+listen-speed 1.0    # normal
+listen-speed 1.1    # slightly faster
+listen-speed 1.2    # noticeably faster
+listen-speed 1.5    # fast
+listen-speed 2.0    # double speed
 ```
 
-TTS is **off by default**. Run `tts-on` once and it persists across sessions until you run `tts-off`.
+Check your current speed anytime with `listen`.
 
 ## Changing the Voice
 
-The default voice is **Aria** (`en-US-AriaNeural`). To use a different voice, edit `tts_hook.py` and change the `VOICE` constant.
+The default voice is **Aria** (`en-US-AriaNeural`). To use a different voice, open `~/.claude/scripts/tts_hook.py` and change the `VOICE` constant.
 
 List all available neural voices:
 
@@ -113,6 +103,8 @@ The script strips the following before speaking:
 - Table rows
 - Bullet/numbered list markers (content is still read)
 
+Responses over 600 words are truncated and Aria will say "response truncated" so you know to scroll for the rest.
+
 ## Hands-Free Workflow
 
 This hook covers the **output** side. For the **input** side (speaking your prompts), use any system-wide dictation tool:
@@ -123,24 +115,49 @@ This hook covers the **output** side. For the **input** side (speaking your prom
 Combined workflow:
 1. Activate dictation → speak your prompt → it types into Claude Code
 2. Claude generates a response
-3. Hook fires → Aria reads the response aloud
+3. Hook fires → Aria reads the response aloud at your chosen speed
 4. Speak your next prompt
 
 Fully hands-free, no screen reading required.
 
+## Manual Hook Setup
+
+If you prefer not to use the installer, add this to `~/.claude/settings.json`:
+
+```json
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/scripts/tts_hook.py",
+            "async": true
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
 ## Troubleshooting
 
 **TTS isn't speaking:**
-- Confirm `~/.claude/tts_enabled` exists: `ls ~/.claude/tts_enabled`
+- Run `listen` to check if it's enabled
 - Check `edge-tts` is installed: `edge-tts --version`
 - Confirm the hook is in `~/.claude/settings.json`
 
 **Audio is delayed:**
-- Edge TTS requires a network request. On slow connections there may be a 1-2 second delay before audio starts.
+- Edge TTS requires a network request. On slow connections there may be a 1-2 second delay.
 
 **Want offline TTS:**
-- Replace the `speak()` function with a call to macOS `say`: `subprocess.run(["say", text])`
+- Replace the `speak()` function body with: `subprocess.run(["say", "-r", "220", text])`
 - Quality will be lower but works without internet.
+
+**Need to stop audio immediately:**
+- Run `listen-stop`
 
 ## License
 
